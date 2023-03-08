@@ -51,6 +51,7 @@ var identityFile *string
 var connTimeout int
 var ignored *regexp.Regexp
 var verbosity int
+var rsyncParam *string
 
 var controlPath string
 
@@ -123,16 +124,20 @@ func syncFiles(sshCmd string) {
 	deleted := make([]string, 0)
 	for file := range filesUnique {
 		if fileExists(localDir + "/" + file) {
+            fmt.Println(fmt.Sprintf("  * UPL: %s", file))
 			existing = append(existing, escapeFile(file))
 		} else {
+			fmt.Println(fmt.Sprintf("  * DEL: %s", file))
 			deleted = append(deleted, escapeFile(file))
 		}
 	}
 
+	currentTime := time.Now().Format("2006-01-02 15:04:05")
 	commands := make(map[string]string)
 	if len(existing) > 0 {
-		commands[fmt.Sprintf("uploading %d file(s)", len(existing))] = fmt.Sprintf(
-			"rsync -azER -e '%s' %s %s:%s > /dev/null",
+		commands[fmt.Sprintf("%s uploading %d file(s)", currentTime, len(existing))] = fmt.Sprintf(
+			"rsync -azER %s -e '%s' %s %s:%s > /dev/null",
+			*rsyncParam,
 			sshCmd,
 			strings.Join(existing, " "),
 			remoteHost,
@@ -140,7 +145,7 @@ func syncFiles(sshCmd string) {
 		)
 	}
 	if len(deleted) > 0 {
-		commands[fmt.Sprintf("deleting %d file(s)", len(deleted))] = fmt.Sprintf(
+		commands[fmt.Sprintf("%s deleting %d file(s)", currentTime, len(deleted))] = fmt.Sprintf(
 			"%s %s 'cd %s && rm -rf %s'",
 			sshCmd,
 			remoteHost,
@@ -259,6 +264,7 @@ func parseArguments() {
 	connTimeoutFlag := flag.Int("t", 5, "connection timeout (seconds)")
 	verbosityFlag   := flag.Int("v", 2, "verbosity level (0-3)")
 	exclude         := flag.String("e", "", "exclude pattern (regexp, f.e. '^\\.git/')")
+	rsyncParam       = flag.String("r", "", "rsync extra params")
 
 	flag.Parse()
 
@@ -370,6 +376,7 @@ func main() {
 		localDir,
 		func(event fsnotify.Event) {
 			if event.Op == fsnotify.Chmod { return }
+            if event.Name == localDir { return }
 
 			filename := event.Name[len(localDir)+1:]
 
