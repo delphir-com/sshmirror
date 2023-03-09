@@ -1,3 +1,7 @@
+<p align="center">
+  <a href="https://stand-with-ukraine.pp.ua" title="#StandWithUkraine"><img alt="#StandWithUkraine" src="https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg"></a>
+</p>
+
 #### Synopsis:
 [Download](https://github.com/0leksandr/sshmirror/releases/latest)
 ```shell script
@@ -5,7 +9,7 @@
 ```
 
 #### Description:
-A fast, continuous, one-directional (local⇒remove) filesystem synchronization client (over SSH).
+A fast, continuous, one-directional (local⇒remote) filesystem synchronization client (over SSH).
 
 Basic usage scenario - local development with constant uploading to remote server via SSH. So basically, a fast alternative to SFTP manager of Jetbrains IDEs.
 
@@ -41,12 +45,11 @@ Basic usage scenario - local development with constant uploading to remote serve
 - no visible speed-up on frequent uploading of singular files (speed-up is ≈10%)
 
 #### Features:
-- using `rsync` for transferring files
-- transferring in batches instead of one-by-one. General rules for grouping files in the queue into a batch are:
+- using `rsync`. Credits: https://github.com/WayneD/rsync
+- transferring in batches instead of one-by-one. Modifications are grouped into a batch if one of the following is true:
   - last modification was made 0.5sec ago
-  - first modification was made 5sec ago, and since then new modifications occur constantly (without break for 0.5sec)
+  - first modification was made 5sec ago
 - using `ssh` "Master connection" feature to keep one constant connection. Thus, once-in-a-while uploads do not need to establish connection over again
-- filesystem events (modifications) tracked by `fsnotify`. Credits: https://github.com/fsnotify/fsnotify
 
 ---
 

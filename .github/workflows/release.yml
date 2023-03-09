@@ -1,0 +1,36 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag name, f.e. v1.0.0
+        required: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: arnested/go-version-action@v1
+        id: go-version
+      - name: Install Go ${{ steps.go-version.outputs.minimal }}
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ steps.go-version.outputs.minimal }}
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: Build
+        run: ./build.sh
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.event.inputs.tag }}
+          files: dist/*
+          token: ${{ secrets.WORKFLOW_RELEASE_TOKEN }}
